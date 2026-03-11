@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Gráficos Interactivos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+
+<link rel="icon" type="image/x-icon" sizes="32x32" href="favicon.ico">
+<link rel="icon" type="image/x-icon" sizes="256x256" href="favicon.ico">
+<link rel="apple-touch-icon" href="favicon.ico">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f0f0;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background: #333;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .title {
+      font-family: 'Roboto', sans-serif;
+      font-weight: 700;
+      font-size: 3rem;
+      color: #4c4fff;
+      text-align: center;
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    body.dark .title {
+      color: #f0f0f0;
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+      margin-right: 1rem;
+    }
+
+    .input-group {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    body.dark .input-group {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .input-group input,
+    .input-group select {
+      border-radius: 8px;
+      padding: 12px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      max-width: 250px;
+      border: 2px solid #ddd;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    body.dark .input-group input,
+    body.dark .input-group select {
+      background-color: #444;
+      border-color: #666;
+      color: #fff;
+    }
+
+    .input-group input[type="color"] {
+      padding: 0;
+      width: 45px;
+      height: 45px;
+    }
+
+    .button {
+      background-color: #48a9a6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    body.dark .button {
+      background-color: #ff9900;
+    }
+
+    .button:hover {
+      background-color: #3c8a7d;
+      transform: translateY(-3px);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    body.dark .canvas-container {
+      background: #444;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: #333;
+    }
+
+    body.dark .footer {
+      color: #fff;
+    }
+
+    .select-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .label-text {
+      color: #333;
+      font-weight: 600;
+      font-size: 1.2rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    body.dark .label-text {
+      color: #fff;
+    }
+
+    .metrics-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .metrics-text {
+      font-size: 1.1rem;
+      color: #4c4fff;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+
+    body.dark .metrics-text {
+      color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1 class="title">
+      <span class="emoji">💎</span>Generador de Gráficos Interactivos💎
+    </h1>
+
+    <!-- Botón para cambiar entre modo claro y oscuro -->
+    <div class="flex justify-end mb-6">
+      <button id="toggleTheme" class="button">Cambiar a Modo Oscuro</button>
+    </div>
+
+    <div class="input-group">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <!-- Entradas para valores, colores y etiquetas -->
+        <div class="flex flex-col">
+          <input type="number" id="value1" class="p-2 border rounded-md w-full" placeholder="Valor 1">
+          <input type="color" id="color1" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label1" class="p-2 border rounded-md w-full" placeholder="Etiqueta 1">
+        </div>
+        <div class="flex flex-col">
+          <input type="number" id="value2" class="p-2 border rounded-md w-full" placeholder="Valor 2">
+          <input type="color" id="color2" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label2" class="p-2 border rounded-md w-full" placeholder="Etiqueta 2">
+        </div>
+        <div class="flex flex-col">
+          <input type="number" id="value3" class="p-2 border rounded-md w-full" placeholder="Valor 3">
+          <input type="color" id="color3" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label3" class="p-2 border rounded-md w-full" placeholder="Etiqueta 3">
+        </div>
+        <div class="flex flex-col">
+          <input type="number" id="value4" class="p-2 border rounded-md w-full" placeholder="Valor 4">
+          <input type="color" id="color4" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label4" class="p-2 border rounded-md w-full" placeholder="Etiqueta 4">
+        </div>
+        <div class="flex flex-col">
+          <input type="number" id="value5" class="p-2 border rounded-md w-full" placeholder="Valor 5">
+          <input type="color" id="color5" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label5" class="p-2 border rounded-md w-full" placeholder="Etiqueta 5">
+        </div>
+        <div class="flex flex-col">
+          <input type="number" id="value6" class="p-2 border rounded-md w-full" placeholder="Valor 6">
+          <input type="color" id="color6" class="w-10 h-10 border rounded-md my-2">
+          <input type="text" id="label6" class="p-2 border rounded-md w-full" placeholder="Etiqueta 6">
+        </div>
+      </div>
+
+      <div class="select-container">
+        <label for="chartType" class="label-text">Seleccionar tipo de gráfico:</label>
+        <select id="chartType" class="p-2 border rounded-md w-48">
+          <option value="bar">Barra</option>
+          <option value="line">Línea</option>
+          <option value="pie">Torta (Pastel)</option>
+        </select>
+      </div>
+
+      <div class="flex justify-center">
+        <button id="generateChart" class="button">Generar Gráfico</button>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="metrics-container">
+      <p id="average" class="metrics-text"></p>
+      <p id="max" class="metrics-text"></p>
+      <p id="min" class="metrics-text"></p>
+      <p id="stdDev" class="metrics-text"></p>
+    </div>
+
+    <div class="flex justify-center space-x-4">
+      <button id="downloadCsv" class="button">Descargar CSV</button>
+    </div>
+
+    <footer class="footer">
+      <p>&copy; 2026-2030 | Generador de Gráficos | Copyright © | THAUROCK, Todos los derechos reservados</p>
+<p>Diseñado con 💙 usando <a href="https://tailwindcss.com" target="_blank">Tailwind CSS</a> y <a href="https://www.chartjs.org/" target="_blank">Chart.js</a>.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Variables globales
+    let chartInstance;
+
+    // Crear el gráfico
+    document.getElementById("generateChart").addEventListener("click", function () {
+      const values = [
+        parseFloat(document.getElementById("value1").value) || 0,
+        parseFloat(document.getElementById("value2").value) || 0,
+        parseFloat(document.getElementById("value3").value) || 0,
+        parseFloat(document.getElementById("value4").value) || 0,
+        parseFloat(document.getElementById("value5").value) || 0,
+        parseFloat(document.getElementById("value6").value) || 0
+      ];
+
+      const labels = [
+        document.getElementById("label1").value || "Etiqueta 1",
+        document.getElementById("label2").value || "Etiqueta 2",
+        document.getElementById("label3").value || "Etiqueta 3",
+        document.getElementById("label4").value || "Etiqueta 4",
+        document.getElementById("label5").value || "Etiqueta 5",
+        document.getElementById("label6").value || "Etiqueta 6"
+      ];
+
+      const colors = [
+        document.getElementById("color1").value || "#ff0000",
+        document.getElementById("color2").value || "#00ff00",
+        document.getElementById("color3").value || "#0000ff",
+        document.getElementById("color4").value || "#ff00ff",
+        document.getElementById("color5").value || "#00ffff",
+        document.getElementById("color6").value || "#ff9900"
+      ];
+
+      const chartType = document.getElementById("chartType").value;
+
+      // Calcular estadísticas
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      const variance = values.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+
+      // Mostrar métricas
+      document.getElementById("average").innerText = `Promedio: ${avg.toFixed(2)}`;
+      document.getElementById("max").innerText = `Máximo: ${max}`;
+      document.getElementById("min").innerText = `Mínimo: ${min}`;
+      document.getElementById("stdDev").innerText = `Desviación Estándar: ${stdDev.toFixed(2)}`;
+
+      // Configuración del gráfico
+      const chartData = {
+        labels: labels,
+        datasets: [{
+          label: 'Datos del Gráfico',
+          data: values,
+          backgroundColor: colors,
+          borderColor: colors,
+          borderWidth: 1
+        }]
+      };
+
+      const config = {
+        type: chartType,
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              enabled: true,
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      };
+
+      const ctx = document.getElementById("myChart").getContext("2d");
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      chartInstance = new Chart(ctx, config);
+    });
+
+    // Descargar los datos como CSV
+    document.getElementById("downloadCsv").addEventListener("click", function () {
+      const values = [
+        parseFloat(document.getElementById("value1").value) || 0,
+        parseFloat(document.getElementById("value2").value) || 0,
+        parseFloat(document.getElementById("value3").value) || 0,
+        parseFloat(document.getElementById("value4").value) || 0,
+        parseFloat(document.getElementById("value5").value) || 0,
+        parseFloat(document.getElementById("value6").value) || 0
+      ];
+
+      const labels = [
+        document.getElementById("label1").value || "Etiqueta 1",
+        document.getElementById("label2").value || "Etiqueta 2",
+        document.getElementById("label3").value || "Etiqueta 3",
+        document.getElementById("label4").value || "Etiqueta 4",
+        document.getElementById("label5").value || "Etiqueta 5",
+        document.getElementById("label6").value || "Etiqueta 6"
+      ];
+
+      const colors = [
+        document.getElementById("color1").value || "#ff0000",
+        document.getElementById("color2").value || "#00ff00",
+        document.getElementById("color3").value || "#0000ff",
+        document.getElementById("color4").value || "#ff00ff",
+        document.getElementById("color5").value || "#00ffff",
+        document.getElementById("color6").value || "#ff9900"
+      ];
+
+      const csv = [
+        ["Etiqueta", "Valor", "Color"],
+        ...labels.map((label, index) => [label, values[index], colors[index]])
+      ]
+        .map(e => e.join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "datos.csv";
+      a.click();
+    });
+
+    // Cambiar entre modo oscuro y claro
+    document.getElementById('toggleTheme').addEventListener('click', function () {
+      document.body.classList.toggle('dark');
+      const currentTheme = document.body.classList.contains('dark') ? 'Modo Claro' : 'Modo Oscuro';
+      document.getElementById('toggleTheme').textContent = `Cambiar a ${currentTheme}`;
+    });
+  </script>
+
+</body>
+
+</html>
